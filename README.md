@@ -12,4 +12,7 @@ The header of a PGM image has the following fields:
 
 The remainder of the file is gray values, each in ASCII decimal, between 0 and the specified maximum value, separated by whitespace, starting at the top-left corner of the graymap, proceeding in normal English reading order. A value of 0 means black, and the maximum value means white.
 
+
+## To Do
+
 Edit the included `index.html` so that it loads the included PGM file (with `fetch`) and renders the image in the browser window (using `<canvas>` and `ImageData`).
