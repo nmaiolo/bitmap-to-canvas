@@ -1,60 +1,74 @@
 <!DOCTYPE html>
-<html lang="en">
-<head><title>PGMA Render - Nina Maiolo</title></head>
+<html>
+<head>
+    <title>PGM Image Viewer</title>
+</head>
 <body>
-  <canvas id="canvas"></canvas>
-  <script>
-    // Edit the included index.html so that it loads the included PGM file (with fetch) and renders the image in the browser window (using <canvas> and ImageData).
+    <canvas id="canvas"></canvas>
 
-    // First make canvas, load PGM file, and loop through pixel data
+    <script>
+        // Define the canvas element and its context
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
 
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
+        // Define the URL of the linked PGM file
+        const pgmFileURL = 'mountain.ascii.pgm'; 
 
-    //Link to PGM file
-    const pgmFileURL = 'mountain.ascii.pgm';
+        // Call the function to load and render the PGM image from the linked file
+        loadAndRenderPGMImage(pgmFileURL);
 
-// Call the function to load and render the PGM image from the linked file
-loadAndRenderPGMImage(pgmFileURL);
+        async function loadAndRenderPGMImage(url) {
+            try {
+                const response = await fetch(url);
 
-async function loadAndRenderPGMImage(url) {
-    try {
-        const response = await fetch(url);
+                if (!response.ok) {
+                    console.error('Failed to fetch the PGM file');
+                    return;
+                }
 
-        if (!response.ok) {
-            throw new Error('Failed to fetch the PGM file');
+                const pgmData = await response.text();
+                renderPGMImage(pgmData);
+            } catch (error) {
+                console.error('Error:', error);
+            }
         }
 
-        const pgmData = await response.text();
-        const imageData = parsePGMImage(pgmData);
+        function renderPGMImage(pgmData) {
+            // Parse the PGM file data and create an ImageData object
+            const textDecoder = new TextDecoder('utf-8');
+            const text = textDecoder.decode(new DataView(new TextEncoder().encode(pgmData)));
+            const lines = text.trim().split('\n');
 
-        if (imageData) {
-            const { width, height, data } = imageData;
+            // Check if it's valid or not 
+            if (lines[0] !== 'P2') {
+                console.error('Invalid PGM file format');
+                return;
+            }
+
+            // Grab the dimensions and w/h/max value
+            const dimensions = lines[1].split(' ');
+            const width = parseInt(dimensions[0]);
+            const height = parseInt(dimensions[1]);
+            const maxValue = parseInt(lines[2]);
+            const pixels = lines.slice(3).map(Number);
+
+            // Create an ImageData object and render it on the canvas
+            const imageData = ctx.createImageData(width, height);
+            const imageDataArray = imageData.data;
+
+            for (let i = 0; i < pixels.length; i++) {
+                const grayValue = pixels[i];
+                const pixelIndex = i * 4;
+                imageDataArray[pixelIndex] = grayValue;
+                imageDataArray[pixelIndex + 1] = grayValue;
+                imageDataArray[pixelIndex + 2] = grayValue;
+                imageDataArray[pixelIndex + 3] = 255; // Alpha channel
+            }
+
             canvas.width = width;
             canvas.height = height;
-            ctx.putImageData(new ImageData(data, width, height), 0, 0);
+            ctx.putImageData(imageData, 0, 0);
         }
-    } catch (error) {
-        console.error('Error:', error);
-    }
-}
-
-function parsePGMImage(pgmData) {
-    const lines = pgmData.trim().split('\n');
-
-    if (lines[0] !== 'P2') {
-        console.error('Invalid PGM file format');
-        return null;
-    }
-
-    const [width, height, maxValue] = lines[2].split(' ').map(Number);
-    const pixels = lines.slice(3).map(Number);
-
-    const imageData = new Uint8ClampedArray(pixels.flatMap(grayValue => [grayValue, grayValue, grayValue, 255]));
-
-    return { width, height, data: imageData };
-}
-
-  </script>
+    </script>
 </body>
 </html>
