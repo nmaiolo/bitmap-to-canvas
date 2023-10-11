@@ -1,10 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><title>PGMA Render</title></head>
+<head><title>PGMA Render - Nina Maiolo</title></head>
 <body>
   <canvas id="canvas"></canvas>
   <script>
-    // code goes here
+    // Edit the included index.html so that it loads the included PGM file (with fetch) and renders the image in the browser window (using <canvas> and ImageData).
+
+    // First make canvas, load PGM file, and loop through pixel data
+
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    //Link to PGM file
+    const pgmFileURL = 'mountain.ascii.pgm';
+
+// Call the function to load and render the PGM image from the linked file
+loadAndRenderPGMImage(pgmFileURL);
+
+async function loadAndRenderPGMImage(url) {
+    try {
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch the PGM file');
+        }
+
+        const pgmData = await response.text();
+        const imageData = parsePGMImage(pgmData);
+
+        if (imageData) {
+            const { width, height, data } = imageData;
+            canvas.width = width;
+            canvas.height = height;
+            ctx.putImageData(new ImageData(data, width, height), 0, 0);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+function parsePGMImage(pgmData) {
+    const lines = pgmData.trim().split('\n');
+
+    if (lines[0] !== 'P2') {
+        console.error('Invalid PGM file format');
+        return null;
+    }
+
+    const [width, height, maxValue] = lines[2].split(' ').map(Number);
+    const pixels = lines.slice(3).map(Number);
+
+    const imageData = new Uint8ClampedArray(pixels.flatMap(grayValue => [grayValue, grayValue, grayValue, 255]));
+
+    return { width, height, data: imageData };
+}
+
   </script>
 </body>
 </html>
