@@ -1,78 +1,76 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>PGM Image Viewer</title>
+    <title>PGM Image Viewer - Nina M</title>
 </head>
 <body>
+    <input type="file" id="fileInput" accept=".pgm">
     <canvas id="canvas"></canvas>
 
     <script>
-        // Edit the included index.html so that it loads the included PGM file (with fetch) 
-        //and renders the image in the browser window (using <canvas> and ImageData).
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+      const fileInput = document.getElementById('fileInput');
 
-        
-        // Define the canvas element and its context
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
+      fileInput.addEventListener('change', handleFileSelect, false);
 
-        // Define the URL of the linked PGM file
-        const pgmFileURL = 'mountain.ascii.pgm'; 
+      function handleFileSelect(event) {
+          const file = event.target.files[0];
 
-        // Call the function to load and render the PGM image from the linked file
-        loadAndRenderPGMImage(pgmFileURL);
+          if (file) {
+              loadAndRenderPGMImage(file);
+          }
+      }
 
-        async function loadAndRenderPGMImage(url) {
-            try {
-                const response = await fetch(url);
+      function loadAndRenderPGMImage(file) {
+          const reader = new FileReader();
 
-                if (!response.ok) {
-                    console.error('Failed to fetch the PGM file');
-                    return;
-                }
+          reader.onload = function (e) {
+              const pgmData = e.target.result;
+              renderPGMImage(pgmData);
+          };
 
-                const pgmData = await response.text();
-                renderPGMImage(pgmData);
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        }
+          reader.readAsText(file);
+      }
 
-        function renderPGMImage(pgmData) {
-            // Parse the PGM file data and create an ImageData object
-            const textDecoder = new TextDecoder('utf-8');
-            const text = textDecoder.decode(new DataView(new TextEncoder().encode(pgmData)));
-            const lines = text.trim().split('\n');
+      function renderPGMImage(pgmData) {
+          const lines = pgmData.split('\n');
+          if (lines[0].trim() !== 'P2') {
+              console.error('Wrong format');
+              return;
+          }
 
-            // Check if it's valid or not 
-            if (lines[0] !== 'P2') {
-                console.error('Invalid PGM file format');
-                return;
-            }
+          // Parse header information
+          const dimensions = lines[2].split(' ');
+          const width = parseInt(dimensions[0]);
+          const height = parseInt(dimensions[1]);
+          const maxValue = parseInt(lines[3]);
 
-            // Grab the dimensions and w/h/max value
-            const dimensions = lines[1].split(' ');
-            const width = parseInt(dimensions[0]);
-            const height = parseInt(dimensions[1]);
-            const maxValue = parseInt(lines[2]);
-            const pixels = lines.slice(3).map(Number);
+          // Parse pixel values
+          const pixelData = lines.slice(4).join(' ').split(/\s+/).map(Number);
 
-            // Create an ImageData object and render it on the canvas
-            const imageData = ctx.createImageData(width, height);
-            const imageDataArray = imageData.data;
+          // Create an ImageData object
+          const imageData = ctx.createImageData(width, height);
+          const imageDataArray = imageData.data;
 
-            for (let i = 0; i < pixels.length; i++) {
-                const grayValue = pixels[i];
-                const pixelIndex = i * 4;
-                imageDataArray[pixelIndex] = grayValue;
-                imageDataArray[pixelIndex + 1] = grayValue;
-                imageDataArray[pixelIndex + 2] = grayValue;
-                imageDataArray[pixelIndex + 3] = 255; // Alpha channel
-            }
+          for (let i = 0; i < pixelData.length; i++) {
+              const grayValue = pixelData[i];
+              const pixelIndex = i * 4;
+              imageDataArray[pixelIndex] = grayValue;
+              imageDataArray[pixelIndex + 1] = grayValue;
+              imageDataArray[pixelIndex + 2] = grayValue;
+              imageDataArray[pixelIndex + 3] = 255; // Alpha channel
+          }
 
-            canvas.width = width;
-            canvas.height = height;
-            ctx.putImageData(imageData, 0, 0);
-        }
+          // Set up the canvas
+          canvas.width = width;
+          canvas.height = height;
+
+          // Render the ImageData on the canvas
+          ctx.putImageData(imageData, 0, 0);
+      }
+
     </script>
+
 </body>
 </html>
