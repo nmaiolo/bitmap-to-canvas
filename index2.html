@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PGM Image Viewer</title>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Define the URL of the linked PGM file
+        const pgmFileURL = 'mountain.ascii.pgm';
+
+        // Call the function to load and render the PGM image from the linked file
+        loadAndRenderPGMImage(pgmFileURL);
+
+        async function loadAndRenderPGMImage(url) {
+            try {
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    console.error('Failed to fetch the PGM file');
+                    return;
+                }
+
+                const pgmData = await response.text();
+                renderPGMImage(pgmData);
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        function renderPGMImage(pgmData) {
+            const lines = pgmData.split('\n');
+            if (lines[0].trim() !== 'P2') {
+                console.error('Invalid PGM file format (must be P2)');
+                return;
+            }
+
+            // Parse header information
+            const dimensions = lines[2].split(' ');
+            const width = parseInt(dimensions[0]);
+            const height = parseInt(dimensions[1]);
+            const maxValue = parseInt(lines[3]);
+
+            // Parse pixel values
+            const pixelData = lines.slice(4).join(' ').split(/\s+/).map(Number);
+
+            // Create an ImageData object
+            const imageData = ctx.createImageData(width, height);
+            const imageDataArray = imageData.data;
+
+            for (let i = 0; i < pixelData.length; i++) {
+                const grayValue = pixelData[i];
+                const pixelIndex = i * 4;
+                imageDataArray[pixelIndex] = grayValue;
+                imageDataArray[pixelIndex + 1] = grayValue;
+                imageDataArray[pixelIndex + 2] = grayValue;
+                imageDataArray[pixelIndex + 3] = 255; // Alpha channel
+            }
+
+            // Set canvas size
+            canvas.width = width;
+            canvas.height = height;
+
+            // Render the ImageData on the canvas
+            ctx.putImageData(imageData, 0, 0);
+        }
+    </script>
+</body>
+</html>
