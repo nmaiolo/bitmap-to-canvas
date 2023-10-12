@@ -33,26 +33,28 @@
           reader.readAsText(file);
       }
 
-      function renderPGMImage(pgmData) {
+        // If P2 is not at the beginning of the PGM file, throw error to console
+        function renderPGMImage(pgmData) {
           const lines = pgmData.split('\n');
           if (lines[0].trim() !== 'P2') {
               console.error('Wrong format');
               return;
           }
 
-          // Parse header information
+          // Grab info from beginning of document 
           const dimensions = lines[2].split(' ');
           const width = parseInt(dimensions[0]);
           const height = parseInt(dimensions[1]);
           const maxValue = parseInt(lines[3]);
 
-          // Parse pixel values
+          // Grab all the pixel info 
           const pixelData = lines.slice(4).join(' ').split(/\s+/).map(Number);
 
           // Create an ImageData object
           const imageData = ctx.createImageData(width, height);
           const imageDataArray = imageData.data;
-
+          
+          // Loop through all lines of the pixel data 
           for (let i = 0; i < pixelData.length; i++) {
               const grayValue = pixelData[i];
               const pixelIndex = i * 4;
