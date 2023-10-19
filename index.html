@@ -4,10 +4,13 @@
     <title>PGM Image Viewer - Nina M</title>
 </head>
 <body>
+
     <input type="file" id="fileInput" accept=".pgm">
     <canvas id="canvas"></canvas>
 
     <script>
+
+      // Build the canvas  
       const canvas = document.getElementById('canvas');
       const ctx = canvas.getContext('2d');
       const fileInput = document.getElementById('fileInput');
